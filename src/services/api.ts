@@ -11,6 +11,7 @@ import type {
   UpdateAffiliationRequest,
   ApiError 
 } from '@/types/api';
+import { PositionType } from '@/types/api';
 
 const API_BASE_URL = 'https://api.staging.researchmate.ai/v1';
 
@@ -40,7 +41,7 @@ const dummyAffiliations: Affiliation[] = [
     institution: 'University of Example',
     department: 'Computer Science',
     position_title: 'Assistant Professor',
-    position_type: 'faculty' as any,
+    position_type: PositionType.FACULTY,
     start_date: '2020-09-01',
     end_date: undefined,
     is_primary: true,
@@ -52,7 +53,7 @@ const dummyAffiliations: Affiliation[] = [
     institution: 'Tech Corp',
     department: 'Research Division',
     position_title: 'Senior Researcher',
-    position_type: 'industry' as any,
+    position_type: PositionType.INDUSTRY,
     start_date: '2018-06-01',
     end_date: '2020-08-31',
     is_primary: false,
@@ -180,7 +181,13 @@ export const affiliationsApi = {
       await new Promise(resolve => setTimeout(resolve, 800));
       const newAffiliation: Affiliation = {
         id: String(Date.now()),
-        ...affiliation,
+        institution: affiliation.institution,
+        department: affiliation.department,
+        position_title: affiliation.position_title,
+        position_type: affiliation.position_type,
+        start_date: affiliation.start_date,
+        end_date: affiliation.end_date,
+        is_primary: affiliation.is_primary || false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -196,7 +203,11 @@ export const affiliationsApi = {
       await new Promise(resolve => setTimeout(resolve, 800));
       const index = dummyAffiliations.findIndex(a => a.id === id);
       if (index >= 0) {
-        dummyAffiliations[index] = { ...dummyAffiliations[index], ...updates, updated_at: new Date().toISOString() };
+        dummyAffiliations[index] = { 
+          ...dummyAffiliations[index], 
+          ...updates, 
+          updated_at: new Date().toISOString() 
+        };
         return dummyAffiliations[index];
       }
       throw new Error('Affiliation not found');
