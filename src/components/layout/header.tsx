@@ -32,6 +32,21 @@ export const Header: React.FC = () => {
           <span className="font-bold text-xl text-foreground">Research Mate</span>
         </Link>
 
+        <nav className="hidden md:flex items-center space-x-6">
+          <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
+            Dashboard
+          </Link>
+          <Link to="/researchers" className="text-foreground hover:text-primary transition-colors">
+            Find Researchers
+          </Link>
+          <Link to="/papers" className="text-foreground hover:text-primary transition-colors">
+            Papers
+          </Link>
+          <Link to="/projects" className="text-foreground hover:text-primary transition-colors">
+            Projects
+          </Link>
+        </nav>
+
         <div className="flex items-center space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

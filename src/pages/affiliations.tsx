@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Building, Edit, Trash2, Star } from 'lucide-react';
+import { Plus, Building, Edit, Trash2, Star, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,11 +60,19 @@ export const AffiliationsPage: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Affiliations</h1>
-            <p className="text-muted-foreground">
-              Manage your institutional affiliations and positions
-            </p>
+          <div className="flex items-center space-x-4">
+            <Link to="/profile">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Profile
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Affiliations</h1>
+              <p className="text-muted-foreground">
+                Manage your institutional affiliations and positions
+              </p>
+            </div>
           </div>
           <Button asChild className="metallic-btn">
             <Link to="/profile/affiliations/new">

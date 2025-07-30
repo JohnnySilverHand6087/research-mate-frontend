@@ -28,6 +28,11 @@ export const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) =>
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Redirect authenticated users to dashboard instead of profile
+  if (isAuthenticated && location.pathname === '/') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-card">
       <Header />
