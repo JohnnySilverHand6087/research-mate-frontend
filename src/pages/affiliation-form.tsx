@@ -27,7 +27,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ProtectedLayout } from '@/components/layout/protected-layout';
 import { useAffiliations } from '@/hooks/useAffiliations';
 import { affiliationSchema, type AffiliationFormData } from '@/schema/affiliation';
-import { PositionType } from '@/types/api';
+import { PositionType, type CreateAffiliationRequest } from '@/types/api';
 import { toast } from '@/hooks/use-toast';
 
 const POSITION_TYPE_OPTIONS = [
@@ -75,7 +75,7 @@ export const AffiliationFormPage: React.FC = () => {
       if (isEditing && id) {
         await updateAffiliation(id, data);
       } else {
-        await createAffiliation(data);
+        await createAffiliation(data as CreateAffiliationRequest);
       }
       navigate('/profile/affiliations');
     } catch (error) {

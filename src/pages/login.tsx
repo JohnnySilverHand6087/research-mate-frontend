@@ -19,6 +19,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 import { loginSchema, type LoginFormData } from '@/schema/auth';
+import { type LoginRequest } from '@/types/api';
 
 export const LoginPage: React.FC = () => {
   const { login, isLoading, isAuthenticated } = useAuth();
@@ -43,7 +44,7 @@ export const LoginPage: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data);
+      await login(data as LoginRequest);
     } catch (error) {
       // Error handling is done in the auth hook
     }

@@ -19,6 +19,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/services/api';
 import { registerSchema, type RegisterFormData } from '@/schema/auth';
+import { type RegisterRequest } from '@/types/api';
 
 export const SignupPage: React.FC = () => {
   const { register, isLoading, isAuthenticated } = useAuth();
@@ -42,7 +43,7 @@ export const SignupPage: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      await register(data);
+      await register(data as RegisterRequest);
     } catch (error) {
       // Error handling is done in the auth hook
     }
