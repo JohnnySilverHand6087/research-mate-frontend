@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +30,9 @@ export const ProfileEditPage: React.FC = () => {
   const [socialLinks, setSocialLinks] = React.useState<Record<string, string>>(
     user?.social_links || {}
   );
+  const [researchExpertise, setResearchExpertise] = React.useState<string[]>(
+    user?.research_expertise || []
+  );
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -46,6 +49,7 @@ export const ProfileEditPage: React.FC = () => {
       await updateProfile({
         ...data,
         social_links: socialLinks,
+        research_expertise: researchExpertise,
       });
       navigate('/profile');
     } catch (error) {
@@ -75,6 +79,17 @@ export const ProfileEditPage: React.FC = () => {
       delete updated[platform];
       return updated;
     });
+  };
+
+  const addExpertiseArea = () => {
+    const area = prompt('Enter research expertise area:');
+    if (area && !researchExpertise.includes(area)) {
+      setResearchExpertise(prev => [...prev, area]);
+    }
+  };
+
+  const removeExpertiseArea = (area: string) => {
+    setResearchExpertise(prev => prev.filter(item => item !== area));
   };
 
   if (!user) return null;
@@ -204,6 +219,45 @@ export const ProfileEditPage: React.FC = () => {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Research Expertise */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-foreground">Research Expertise</label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addExpertiseArea}
+                      className="bg-muted/50 hover:bg-muted"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Area
+                    </Button>
+                  </div>
+                  
+                  {researchExpertise.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {researchExpertise.map((area, index) => (
+                        <div key={index} className="flex items-center gap-1 bg-primary/20 text-primary px-3 py-1 rounded-md">
+                          <Tag className="w-3 h-3" />
+                          <span className="text-sm">{area}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExpertiseArea(area)}
+                            className="h-auto p-0 ml-1 text-primary hover:text-primary hover:bg-transparent"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No research expertise areas added yet.</p>
+                  )}
                 </div>
 
                 {/* Social Links */}

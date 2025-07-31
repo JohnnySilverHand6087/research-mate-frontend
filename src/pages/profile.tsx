@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Mail, Globe, ExternalLink, Building } from 'lucide-react';
+import { Edit, Mail, Globe, ExternalLink, Building, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,6 +75,21 @@ export const ProfilePage: React.FC = () => {
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Bio</h3>
                 <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+              </div>
+            )}
+
+            {/* Research Expertise */}
+            {user.research_expertise && user.research_expertise.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-foreground mb-3">Research Expertise</h3>
+                <div className="flex flex-wrap gap-2">
+                  {user.research_expertise.map((area, index) => (
+                    <Badge key={index} variant="secondary" className="bg-primary/20 text-primary">
+                      <Tag className="w-3 h-3 mr-1" />
+                      {area}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
 

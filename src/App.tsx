@@ -10,6 +10,7 @@ import { LoginPage } from "@/pages/login";
 import { SignupPage } from "@/pages/signup";
 import { DashboardPage } from "@/pages/dashboard";
 import { ResearcherSearchPage } from "@/pages/researcher-search";
+import { ResearcherProfilePage } from "@/pages/researcher-profile";
 import { ProfilePage } from "@/pages/profile";
 import { ProfileEditPage } from "@/pages/profile-edit";
 import { AffiliationsPage } from "@/pages/affiliations";
@@ -49,6 +50,7 @@ const App = () => (
             {/* Protected routes */}
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/researchers" element={<ResearcherSearchPage />} />
+            <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<ProfileEditPage />} />
             <Route path="/profile/affiliations" element={<AffiliationsPage />} />

@@ -164,10 +164,12 @@ export const ResearcherSearchPage: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{researcher.email}</span>
-                      <Button variant="ghost" size="sm">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Profile
-                      </Button>
+                      <Link to={`/researchers/${researcher.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View Profile
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>

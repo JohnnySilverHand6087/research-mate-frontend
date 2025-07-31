@@ -12,6 +12,7 @@ export interface User {
   avatar_url?: string;
   social_links?: Record<string, string>;
   primary_affiliation?: string;
+  research_expertise?: string[];
   is_verified: boolean;
   created_at: string;
   updated_at: string;
@@ -41,6 +42,7 @@ export interface UpdateProfileRequest {
   website?: string;
   orcid_id?: string;
   social_links?: Record<string, string>;
+  research_expertise?: string[];
 }
 
 export enum PositionType {
