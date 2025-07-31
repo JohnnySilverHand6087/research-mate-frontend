@@ -85,3 +85,91 @@ export interface ApiError {
   code?: string;
   details?: Record<string, any>;
 }
+
+// Project Types
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  status: 'active' | 'completed' | 'archived';
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProjectRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
+  status?: 'active' | 'completed' | 'archived';
+}
+
+// Task Types for Kanban Board
+export enum TaskStatus {
+  TODO = 'todo',
+  IN_PROGRESS = 'in_progress',
+  REVIEW = 'review',
+  DONE = 'done'
+}
+
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent'
+}
+
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskRequest {
+  project_id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority?: TaskPriority;
+}
+
+export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {}
+
+// Document Types
+export enum DocumentType {
+  PAPER = 'paper',
+  ARTICLE = 'article',
+  LINK = 'link',
+  FILE = 'file'
+}
+
+export interface Document {
+  id: string;
+  project_id: string;
+  title: string;
+  type: DocumentType;
+  url?: string;
+  file_path?: string;
+  summary?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDocumentRequest {
+  project_id: string;
+  title: string;
+  type: DocumentType;
+  url?: string;
+  summary?: string;
+  tags?: string[];
+}
+
+export interface UpdateDocumentRequest extends Partial<CreateDocumentRequest> {}
