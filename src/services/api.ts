@@ -9,9 +9,17 @@ import type {
   Affiliation,
   CreateAffiliationRequest,
   UpdateAffiliationRequest,
-  ApiError 
+  ApiError,
+  Project,
+  CreateProjectRequest,
+  UpdateProjectRequest,
+  Task,
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  Document,
+  CreateDocumentRequest
 } from '@/types/api';
-import { PositionType } from '@/types/api';
+import { PositionType, TaskStatus, TaskPriority, DocumentType } from '@/types/api';
 
 const API_BASE_URL = 'https://api.staging.researchmate.ai/v1';
 
@@ -59,6 +67,128 @@ const dummyAffiliations: Affiliation[] = [
     is_primary: false,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
+  },
+];
+
+// Dummy projects data
+const dummyProjects: Project[] = [
+  {
+    id: '1',
+    name: 'Research Paper Analysis',
+    description: 'Analyzing recent developments in machine learning research',
+    status: 'active',
+    user_id: '1',
+    created_at: '2024-01-15T10:00:00Z',
+    updated_at: '2024-01-20T14:30:00Z',
+  },
+  {
+    id: '2',
+    name: 'Literature Review',
+    description: 'Comprehensive review of natural language processing literature',
+    status: 'active',
+    user_id: '1',
+    created_at: '2024-01-10T09:00:00Z',
+    updated_at: '2024-01-18T16:45:00Z',
+  },
+  {
+    id: '3',
+    name: 'Thesis Preparation',
+    description: 'Preparing final thesis chapters and references',
+    status: 'completed',
+    user_id: '1',
+    created_at: '2023-12-01T08:00:00Z',
+    updated_at: '2024-01-05T12:00:00Z',
+  },
+];
+
+// Dummy tasks data
+const dummyTasks: Task[] = [
+  {
+    id: '1',
+    project_id: '1',
+    title: 'Read latest ML papers',
+    description: 'Review 5 recent papers on transformer architectures',
+    status: TaskStatus.TODO,
+    priority: TaskPriority.HIGH,
+    created_at: '2024-01-15T10:00:00Z',
+    updated_at: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: '2',
+    project_id: '1',
+    title: 'Analyze experimental results',
+    description: 'Statistical analysis of model performance data',
+    status: TaskStatus.IN_PROGRESS,
+    priority: TaskPriority.MEDIUM,
+    created_at: '2024-01-16T11:00:00Z',
+    updated_at: '2024-01-18T14:30:00Z',
+  },
+  {
+    id: '3',
+    project_id: '1',
+    title: 'Write summary report',
+    description: 'Compile findings into comprehensive report',
+    status: TaskStatus.REVIEW,
+    priority: TaskPriority.HIGH,
+    created_at: '2024-01-17T09:30:00Z',
+    updated_at: '2024-01-19T16:15:00Z',
+  },
+  {
+    id: '4',
+    project_id: '1',
+    title: 'Setup research environment',
+    description: 'Configure development tools and libraries',
+    status: TaskStatus.DONE,
+    priority: TaskPriority.LOW,
+    created_at: '2024-01-14T14:00:00Z',
+    updated_at: '2024-01-15T09:45:00Z',
+  },
+  {
+    id: '5',
+    project_id: '2',
+    title: 'Survey NLP literature',
+    description: 'Identify key papers and methodologies',
+    status: TaskStatus.TODO,
+    priority: TaskPriority.URGENT,
+    created_at: '2024-01-10T09:00:00Z',
+    updated_at: '2024-01-10T09:00:00Z',
+  },
+];
+
+// Dummy documents data
+const dummyDocuments: Document[] = [
+  {
+    id: '1',
+    project_id: '1',
+    title: 'Attention Is All You Need',
+    type: DocumentType.PAPER,
+    url: 'https://arxiv.org/abs/1706.03762',
+    summary: 'Seminal paper introducing the Transformer architecture',
+    tags: ['transformer', 'attention', 'nlp'],
+    created_at: '2024-01-15T10:30:00Z',
+    updated_at: '2024-01-15T10:30:00Z',
+  },
+  {
+    id: '2',
+    project_id: '1',
+    title: 'BERT: Pre-training of Deep Bidirectional Transformers',
+    type: DocumentType.PAPER,
+    url: 'https://arxiv.org/abs/1810.04805',
+    summary: 'Introduction of BERT model for language understanding',
+    tags: ['bert', 'pretraining', 'bidirectional'],
+    created_at: '2024-01-16T14:20:00Z',
+    updated_at: '2024-01-16T14:20:00Z',
+  },
+  {
+    id: '3',
+    project_id: '2',
+    title: 'Hugging Face Documentation',
+    type: DocumentType.LINK,
+    url: 'https://huggingface.co/docs',
+    summary: 'Comprehensive guide to using transformer models',
+    tags: ['documentation', 'huggingface', 'tutorial'],
+    created_at: '2024-01-12T11:15:00Z',
+    updated_at: '2024-01-12T11:15:00Z',
   },
 ];
 
@@ -226,6 +356,185 @@ export const affiliationsApi = {
       return;
     }
     await apiClient.delete(`/users/me/affiliations/${id}`);
+  },
+};
+
+// Projects API
+export const projectsApi = {
+  async getProjects(): Promise<Project[]> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return dummyProjects;
+    }
+    const response = await apiClient.get('/projects');
+    return response.data;
+  },
+
+  async getProject(id: string): Promise<Project> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const project = dummyProjects.find(p => p.id === id);
+      if (!project) throw new Error('Project not found');
+      return project;
+    }
+    const response = await apiClient.get(`/projects/${id}`);
+    return response.data;
+  },
+
+  async createProject(project: CreateProjectRequest): Promise<Project> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const newProject: Project = {
+        id: String(Date.now()),
+        name: project.name,
+        description: project.description,
+        status: 'active',
+        user_id: '1',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      dummyProjects.push(newProject);
+      return newProject;
+    }
+    const response = await apiClient.post('/projects', project);
+    return response.data;
+  },
+
+  async updateProject(id: string, updates: UpdateProjectRequest): Promise<Project> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const index = dummyProjects.findIndex(p => p.id === id);
+      if (index >= 0) {
+        dummyProjects[index] = {
+          ...dummyProjects[index],
+          ...updates,
+          updated_at: new Date().toISOString(),
+        };
+        return dummyProjects[index];
+      }
+      throw new Error('Project not found');
+    }
+    const response = await apiClient.patch(`/projects/${id}`, updates);
+    return response.data;
+  },
+
+  async deleteProject(id: string): Promise<void> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      const index = dummyProjects.findIndex(p => p.id === id);
+      if (index >= 0) {
+        dummyProjects.splice(index, 1);
+      }
+      return;
+    }
+    await apiClient.delete(`/projects/${id}`);
+  },
+};
+
+// Tasks API
+export const tasksApi = {
+  async getTasks(projectId: string): Promise<Task[]> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      return dummyTasks.filter(task => task.project_id === projectId);
+    }
+    const response = await apiClient.get(`/projects/${projectId}/tasks`);
+    return response.data;
+  },
+
+  async createTask(task: CreateTaskRequest): Promise<Task> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const newTask: Task = {
+        id: String(Date.now()),
+        project_id: task.project_id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority || TaskPriority.MEDIUM,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      dummyTasks.push(newTask);
+      return newTask;
+    }
+    const response = await apiClient.post(`/projects/${task.project_id}/tasks`, task);
+    return response.data;
+  },
+
+  async updateTask(id: string, updates: UpdateTaskRequest): Promise<Task> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const index = dummyTasks.findIndex(t => t.id === id);
+      if (index >= 0) {
+        dummyTasks[index] = {
+          ...dummyTasks[index],
+          ...updates,
+          updated_at: new Date().toISOString(),
+        };
+        return dummyTasks[index];
+      }
+      throw new Error('Task not found');
+    }
+    const response = await apiClient.patch(`/tasks/${id}`, updates);
+    return response.data;
+  },
+
+  async deleteTask(id: string): Promise<void> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = dummyTasks.findIndex(t => t.id === id);
+      if (index >= 0) {
+        dummyTasks.splice(index, 1);
+      }
+      return;
+    }
+    await apiClient.delete(`/tasks/${id}`);
+  },
+};
+
+// Documents API
+export const documentsApi = {
+  async getDocuments(projectId: string): Promise<Document[]> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      return dummyDocuments.filter(doc => doc.project_id === projectId);
+    }
+    const response = await apiClient.get(`/projects/${projectId}/documents`);
+    return response.data;
+  },
+
+  async createDocument(document: CreateDocumentRequest): Promise<Document> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const newDocument: Document = {
+        id: String(Date.now()),
+        project_id: document.project_id,
+        title: document.title,
+        type: document.type,
+        url: document.url,
+        summary: document.summary,
+        tags: document.tags,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      dummyDocuments.push(newDocument);
+      return newDocument;
+    }
+    const response = await apiClient.post(`/projects/${document.project_id}/documents`, document);
+    return response.data;
+  },
+
+  async deleteDocument(id: string): Promise<void> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = dummyDocuments.findIndex(d => d.id === id);
+      if (index >= 0) {
+        dummyDocuments.splice(index, 1);
+      }
+      return;
+    }
+    await apiClient.delete(`/documents/${id}`);
   },
 };
 
