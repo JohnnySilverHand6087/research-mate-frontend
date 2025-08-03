@@ -19,6 +19,14 @@ import type {
   Document,
   CreateDocumentRequest
 } from '@/types/api';
+import {
+  Paper,
+  PaperNote,
+  PaperCategory,
+  CreatePaperRequest,
+  CreateNoteRequest,
+  ChatMessage
+} from '@/types/papers';
 import { PositionType, TaskStatus, TaskPriority, DocumentType } from '@/types/api';
 
 const API_BASE_URL = 'https://api.staging.researchmate.ai/v1';
@@ -538,6 +546,107 @@ export const documentsApi = {
   },
 };
 
+// Papers API
+export const papersApi = {
+  getPapers: async (): Promise<Paper[]> => {
+    // Dummy data for now
+    return [
+      {
+        id: '1',
+        title: 'Attention Is All You Need',
+        authors: ['Ashish Vaswani', 'Noam Shazeer', 'Niki Parmar'],
+        abstract: 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks...',
+        category: PaperCategory.MACHINE_LEARNING,
+        publication_date: '2017-06-12',
+        journal: 'NIPS',
+        doi: '10.48550/arXiv.1706.03762',
+        pdf_url: 'https://arxiv.org/pdf/1706.03762.pdf',
+        tags: ['transformers', 'attention', 'neural networks'],
+        notes: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: '2',
+        title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
+        authors: ['Jacob Devlin', 'Ming-Wei Chang', 'Kenton Lee'],
+        abstract: 'We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers...',
+        category: PaperCategory.NATURAL_LANGUAGE_PROCESSING,
+        publication_date: '2018-10-11',
+        journal: 'NAACL',
+        doi: '10.48550/arXiv.1810.04805',
+        pdf_url: 'https://arxiv.org/pdf/1810.04805.pdf',
+        tags: ['bert', 'nlp', 'transformers'],
+        notes: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: '3',
+        title: 'ResNet: Deep Residual Learning for Image Recognition',
+        authors: ['Kaiming He', 'Xiangyu Zhang', 'Shaoqing Ren'],
+        abstract: 'Deeper neural networks are more difficult to train. We present a residual learning framework...',
+        category: PaperCategory.COMPUTER_VISION,
+        publication_date: '2015-12-10',
+        journal: 'CVPR',
+        doi: '10.48550/arXiv.1512.03385',
+        pdf_url: 'https://arxiv.org/pdf/1512.03385.pdf',
+        tags: ['resnet', 'computer vision', 'deep learning'],
+        notes: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    ];
+  },
+
+  createPaper: async (paper: CreatePaperRequest): Promise<Paper> => {
+    const newPaper: Paper = {
+      id: Date.now().toString(),
+      ...paper,
+      notes: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    return newPaper;
+  },
+
+  deletePaper: async (id: string): Promise<void> => {
+    // Simulate deletion
+    await new Promise(resolve => setTimeout(resolve, 500));
+  },
+
+  addNote: async (note: CreateNoteRequest): Promise<PaperNote> => {
+    const newNote: PaperNote = {
+      id: Date.now().toString(),
+      ...note,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    return newNote;
+  },
+
+  deleteNote: async (noteId: string): Promise<void> => {
+    // Simulate deletion
+    await new Promise(resolve => setTimeout(resolve, 300));
+  },
+
+  chatWithPaper: async (paperId: string, message: string, conversationHistory: ChatMessage[]): Promise<string> => {
+    // Simulate AI response (in real implementation, this would call an LLM API)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const responses = [
+      "Based on this paper, the key innovation is...",
+      "The methodology described here suggests that...",
+      "This research contributes to the field by...",
+      "The experimental results show that...",
+      "One limitation of this approach is...",
+      "The authors' main argument is that...",
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)] + " " + message.slice(0, 50) + "...";
+  }
+};
+
 // Error handling helper
 export const handleApiError = (error: AxiosError): ApiError => {
   if (error.response?.data) {
@@ -548,3 +657,5 @@ export const handleApiError = (error: AxiosError): ApiError => {
     code: 'UNKNOWN_ERROR',
   };
 };
+
+

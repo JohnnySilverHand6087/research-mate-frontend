@@ -17,6 +17,7 @@ import { AffiliationsPage } from "@/pages/affiliations";
 import { AffiliationFormPage } from "@/pages/affiliation-form";
 import { ProjectsPage } from "@/pages/projects";
 import { ProjectDetailPage } from "@/pages/project-detail";
+import { PapersPage } from "@/pages/papers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -65,8 +66,8 @@ const App = () => (
             <Route path="/projects/:id/kanban" element={<ProjectDetailPage />} />
             <Route path="/projects/:id/documents" element={<ProjectDetailPage />} />
             
-            {/* Placeholder routes for navigation */}
-            <Route path="/papers" element={<div className="p-8 text-center">Papers page - Coming Soon</div>} />
+            {/* Papers routes */}
+            <Route path="/papers" element={<PapersPage />} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
