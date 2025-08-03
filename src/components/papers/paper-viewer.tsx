@@ -70,14 +70,12 @@ export const PaperViewer: React.FC<PaperViewerProps> = ({
                 </Badge>
               ))}
             </div>
-            {paper.pdf_url && (
-              <div className="flex gap-2 ml-auto">
-                <Button size="sm" variant="outline" onClick={openPdfInNewTab}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in New Tab
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2 ml-auto">
+              <Button size="sm" variant="outline" onClick={openPdfInNewTab}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open PDF
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
