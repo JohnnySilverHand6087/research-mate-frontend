@@ -75,6 +75,42 @@ export const PaperSearch: React.FC<PaperSearchProps> = ({ open, onOpenChange }) 
     }
   };
 
+  const handleArxivSearch = async () => {
+    if (!internetQuery.trim()) return;
+    
+    try {
+      const results = await searchPapers.mutateAsync({
+        query: `arxiv:${internetQuery}`,
+        count: parseInt(paperCount)
+      });
+      setSearchResults(results as SearchResult[]);
+    } catch (error) {
+      toast({
+        title: 'arXiv Search Failed',
+        description: 'Failed to search arXiv papers. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSemanticSearch = async () => {
+    if (!internetQuery.trim()) return;
+    
+    try {
+      const results = await searchPapers.mutateAsync({
+        query: `semantic:${internetQuery}`,
+        count: parseInt(paperCount)
+      });
+      setSearchResults(results as SearchResult[]);
+    } catch (error) {
+      toast({
+        title: 'Semantic Scholar Search Failed',
+        description: 'Failed to search Semantic Scholar. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleDOISearch = async () => {
     if (!doiQuery.trim()) return;
     
@@ -152,9 +188,11 @@ export const PaperSearch: React.FC<PaperSearchProps> = ({ open, onOpenChange }) 
           </DialogHeader>
 
           <Tabs defaultValue="internet" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="internet">Search from Internet</TabsTrigger>
-              <TabsTrigger value="doi">Search with DOI</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="internet">Internet</TabsTrigger>
+              <TabsTrigger value="arxiv">arXiv</TabsTrigger>
+              <TabsTrigger value="semantic">Semantic Scholar</TabsTrigger>
+              <TabsTrigger value="doi">DOI</TabsTrigger>
             </TabsList>
 
             <TabsContent value="internet" className="space-y-4">
@@ -188,6 +226,76 @@ export const PaperSearch: React.FC<PaperSearchProps> = ({ open, onOpenChange }) 
                     <Search className="h-4 w-4 mr-2" />
                   )}
                   Search
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="arxiv" className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search arXiv papers..."
+                    value={internetQuery}
+                    onChange={(e) => setInternetQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleArxivSearch()}
+                  />
+                </div>
+                <Select value={paperCount} onValueChange={setPaperCount}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={handleArxivSearch}
+                  disabled={searchPapers.isPending || !internetQuery.trim()}
+                >
+                  {searchPapers.isPending ? (
+                    <LoadingSpinner size="sm" className="mr-2" />
+                  ) : (
+                    <Search className="h-4 w-4 mr-2" />
+                  )}
+                  Search arXiv
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="semantic" className="space-y-4">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search Semantic Scholar..."
+                    value={internetQuery}
+                    onChange={(e) => setInternetQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSemanticSearch()}
+                  />
+                </div>
+                <Select value={paperCount} onValueChange={setPaperCount}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={handleSemanticSearch}
+                  disabled={searchPapers.isPending || !internetQuery.trim()}
+                >
+                  {searchPapers.isPending ? (
+                    <LoadingSpinner size="sm" className="mr-2" />
+                  ) : (
+                    <Search className="h-4 w-4 mr-2" />
+                  )}
+                  Search Semantic
                 </Button>
               </div>
             </TabsContent>
