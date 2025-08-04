@@ -631,20 +631,93 @@ export const papersApi = {
   },
 
   chatWithPaper: async (paperId: string, message: string, conversationHistory: ChatMessage[]): Promise<string> => {
-    // Simulate AI response (in real implementation, this would call an LLM API)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const responses = [
-      "Based on this paper, the key innovation is...",
-      "The methodology described here suggests that...",
-      "This research contributes to the field by...",
-      "The experimental results show that...",
-      "One limitation of this approach is...",
-      "The authors' main argument is that...",
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)] + " " + message.slice(0, 50) + "...";
-  }
+    if (USE_DUMMY_DATA) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock response based on the message
+      const responses = [
+        "Based on this paper, the key findings suggest that...",
+        "The methodology described in this research involves...",
+        "The authors conclude that the main contribution is...",
+        "According to the results section, we can observe that...",
+        "The related work indicates that previous studies have...",
+      ];
+      
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    const response = await apiClient.post(`/papers/${paperId}/chat`, {
+      message,
+      conversation_history: conversationHistory
+    });
+    return response.data.response;
+  },
+
+  searchPapers: async (query: string, count: number): Promise<any[]> => {
+    if (USE_DUMMY_DATA) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Generate mock search results
+      const mockResults = [
+        {
+          title: `Deep Learning Approaches for ${query}`,
+          authors: ["John Smith", "Jane Doe", "Bob Johnson"],
+          abstract: `This paper presents a comprehensive study on ${query} using state-of-the-art deep learning techniques. Our approach demonstrates significant improvements over existing methods.`,
+          publication_date: "2024-01-15",
+          journal: "Nature Machine Intelligence",
+          doi: "10.1038/s42256-024-00001-1",
+          pdf_url: "https://example.com/paper1.pdf"
+        },
+        {
+          title: `A Survey of ${query} Methods in Computer Vision`,
+          authors: ["Alice Brown", "Charlie Wilson"],
+          abstract: `We provide a comprehensive survey of recent advances in ${query} within the computer vision domain. This work covers both theoretical foundations and practical applications.`,
+          publication_date: "2023-12-10",
+          journal: "IEEE Transactions on Pattern Analysis",
+          doi: "10.1109/TPAMI.2023.00002",
+          pdf_url: "https://example.com/paper2.pdf"
+        },
+        {
+          title: `Novel ${query} Architecture for Real-time Applications`,
+          authors: ["David Lee", "Emma Davis", "Frank Miller"],
+          abstract: `We introduce a novel architecture specifically designed for real-time ${query} applications. Our method achieves state-of-the-art performance with minimal computational overhead.`,
+          publication_date: "2024-02-20",
+          journal: "ACM Computing Surveys",
+          doi: "10.1145/3594000.3594001"
+        }
+      ];
+      
+      return mockResults.slice(0, Math.min(count, mockResults.length));
+    }
+
+    const response = await apiClient.get(`/papers/search`, {
+      params: { query, count }
+    });
+    return response.data;
+  },
+
+  searchByDOI: async (doi: string): Promise<any> => {
+    if (USE_DUMMY_DATA) {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
+      // Generate mock DOI result
+      return {
+        title: "Advanced Methods in Machine Learning Research",
+        authors: ["Dr. Research Smith", "Prof. Data Jones"],
+        abstract: "This paper presents groundbreaking research in machine learning methodologies, focusing on novel approaches to complex data analysis and pattern recognition.",
+        publication_date: "2024-03-01",
+        journal: "Journal of Advanced Computing",
+        doi: doi,
+        pdf_url: "https://example.com/doi-paper.pdf"
+      };
+    }
+
+    const response = await apiClient.get(`/papers/doi/${encodeURIComponent(doi)}`);
+    return response.data;
+  },
 };
 
 // Error handling helper

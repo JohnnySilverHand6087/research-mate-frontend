@@ -115,3 +115,30 @@ export const useChatWithPaper = () => {
     },
   });
 };
+
+export const useSearchPapers = () => {
+  return useMutation({
+    mutationFn: ({ query, count }: { query: string; count: number }) => 
+      papersApi.searchPapers(query, count),
+    onError: (error: any) => {
+      toast({
+        title: 'Search Error',
+        description: error.message || 'Failed to search papers',
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+export const useSearchByDOI = () => {
+  return useMutation({
+    mutationFn: (doi: string) => papersApi.searchByDOI(doi),
+    onError: (error: any) => {
+      toast({
+        title: 'DOI Search Error',
+        description: error.message || 'Failed to find paper by DOI',
+        variant: 'destructive',
+      });
+    },
+  });
+};

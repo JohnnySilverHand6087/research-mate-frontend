@@ -12,6 +12,7 @@ import { Paper, PaperCategory } from '@/types/papers';
 import { CreatePaperModal } from '@/components/papers/create-paper-modal';
 import { PaperChatInterface } from '@/components/papers/paper-chat-interface';
 import { PaperViewer } from '@/components/papers/paper-viewer';
+import { PaperSearch } from '@/components/papers/paper-search';
 
 const categoryLabels: Record<PaperCategory, string> = {
   [PaperCategory.MACHINE_LEARNING]: 'Machine Learning',
@@ -49,6 +50,7 @@ export const PapersPage: React.FC = () => {
   const [selectedPaper, setSelectedPaper] = useState<Paper | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   const filteredPapers = papers?.filter(paper => {
     const matchesSearch = 
@@ -97,10 +99,16 @@ export const PapersPage: React.FC = () => {
             Manage and interact with your research paper collection
           </p>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Paper
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setSearchModalOpen(true)}>
+            <Search className="h-4 w-4 mr-2" />
+            Search Papers
+          </Button>
+          <Button onClick={() => setCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Paper
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -218,6 +226,11 @@ export const PapersPage: React.FC = () => {
       <CreatePaperModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
+      />
+      
+      <PaperSearch
+        open={searchModalOpen}
+        onOpenChange={setSearchModalOpen}
       />
 
       {selectedPaper && (
