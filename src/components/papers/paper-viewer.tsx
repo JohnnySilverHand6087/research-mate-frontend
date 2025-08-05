@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAddNote, useDeleteNote } from '@/hooks/usePapers';
 import { Paper, PaperNote } from '@/types/papers';
+import { AdvancedPdfViewer } from './pdf-viewer-advanced';
 
 interface PaperViewerProps {
   paper: Paper;
@@ -83,10 +84,13 @@ export const PaperViewer: React.FC<PaperViewerProps> = ({
           {/* PDF Viewer */}
           <div className="flex-1 bg-muted/20 rounded-lg overflow-hidden">
             {paper.pdf_url ? (
-              <iframe
-                src={`${paper.pdf_url}#toolbar=1&navpanes=1&scrollbar=1`}
-                className="w-full h-full border-0"
-                title={`PDF: ${paper.title}`}
+              <AdvancedPdfViewer
+                pdfUrl={paper.pdf_url}
+                paperId={paper.id}
+                onSaveAnnotations={async (annotations) => {
+                  // This would typically save to your backend
+                  console.log('Saving annotations:', annotations);
+                }}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
