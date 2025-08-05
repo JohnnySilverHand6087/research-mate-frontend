@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Canvas as FabricCanvas, PencilBrush, Circle, Rect, Textbox } from 'fabric';
 import * as pdfjsLib from 'pdfjs-dist';
 import { 
   ZoomIn, 
@@ -43,7 +42,6 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
@@ -53,6 +51,8 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   const [activeColor, setActiveColor] = useState('#ffff00');
   const [isLoading, setIsLoading] = useState(true);
   const [annotations, setAnnotations] = useState<any[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [lastPoint, setLastPoint] = useState<{x: number, y: number} | null>(null);
 
   // Load PDF document
   useEffect(() => {
@@ -76,27 +76,66 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     }
   }, [pdfUrl]);
 
-  // Initialize Fabric Canvas
+  // Initialize Canvas
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 1000,
-      backgroundColor: 'transparent',
-    });
+    const canvas = canvasRef.current;
+    canvas.width = 800;
+    canvas.height = 1000;
 
-    // Configure drawing brush
-    canvas.freeDrawingBrush = new PencilBrush(canvas);
-    canvas.freeDrawingBrush.color = activeColor;
-    canvas.freeDrawingBrush.width = 3;
+    // Add event listeners for drawing
+    const handleMouseDown = (e: MouseEvent) => {
+      if (activeTool === 'draw') {
+        setIsDrawing(true);
+        const rect = canvas.getBoundingClientRect();
+        setLastPoint({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+      }
+    };
 
-    setFabricCanvas(canvas);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDrawing || activeTool !== 'draw' || !lastPoint) return;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const currentPoint = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(currentPoint.x, currentPoint.y);
+      ctx.stroke();
+
+      setLastPoint(currentPoint);
+    };
+
+    const handleMouseUp = () => {
+      setIsDrawing(false);
+      setLastPoint(null);
+    };
+
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseUp);
 
     return () => {
-      canvas.dispose();
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseUp);
     };
-  }, []);
+  }, [activeTool, activeColor, isDrawing, lastPoint]);
 
   // Render PDF page
   const renderPage = useCallback(async (pageNum: number) => {
@@ -112,12 +151,10 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
       canvas.height = viewport.height;
       canvas.width = viewport.width;
 
-      // Update Fabric canvas size to match PDF
-      if (fabricCanvas) {
-        fabricCanvas.setDimensions({
-          width: viewport.width,
-          height: viewport.height
-        });
+      // Update annotation canvas size to match PDF
+      if (canvasRef.current) {
+        canvasRef.current.width = viewport.width;
+        canvasRef.current.height = viewport.height;
       }
 
       const renderContext = {
@@ -130,7 +167,7 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
       console.error('Error rendering page:', error);
       toast.error('Failed to render page');
     }
-  }, [pdfDoc, scale, rotation, fabricCanvas]);
+  }, [pdfDoc, scale, rotation]);
 
   // Render current page when dependencies change
   useEffect(() => {
@@ -139,61 +176,35 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     }
   }, [renderPage, currentPage]);
 
-  // Handle tool changes
+  // Handle cursor changes based on tool
   useEffect(() => {
-    if (!fabricCanvas) return;
-
-    fabricCanvas.isDrawingMode = activeTool === 'draw';
+    if (!canvasRef.current) return;
     
-    if (activeTool === 'draw' && fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.color = activeColor;
-      fabricCanvas.freeDrawingBrush.width = 3;
-    }
-
-    // Set selection mode
-    fabricCanvas.selection = activeTool === 'select';
-    fabricCanvas.defaultCursor = activeTool === 'select' ? 'default' : 'crosshair';
-  }, [activeTool, activeColor, fabricCanvas]);
+    const canvas = canvasRef.current;
+    canvas.style.cursor = activeTool === 'select' ? 'default' : 'crosshair';
+  }, [activeTool]);
 
   const handleToolClick = (tool: AnnotationTool) => {
     setActiveTool(tool);
 
-    if (!fabricCanvas) return;
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
+    if (!ctx) return;
 
     if (tool === 'rectangle') {
-      const rect = new Rect({
-        left: 100,
-        top: 100,
-        fill: 'transparent',
-        stroke: activeColor,
-        strokeWidth: 2,
-        width: 100,
-        height: 80,
-      });
-      fabricCanvas.add(rect);
-      fabricCanvas.setActiveObject(rect);
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(100, 100, 100, 80);
     } else if (tool === 'circle') {
-      const circle = new Circle({
-        left: 100,
-        top: 100,
-        fill: 'transparent',
-        stroke: activeColor,
-        strokeWidth: 2,
-        radius: 40,
-      });
-      fabricCanvas.add(circle);
-      fabricCanvas.setActiveObject(circle);
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(150, 140, 40, 0, 2 * Math.PI);
+      ctx.stroke();
     } else if (tool === 'text') {
-      const textbox = new Textbox('Add your text here', {
-        left: 100,
-        top: 100,
-        fontFamily: 'Arial',
-        fontSize: 16,
-        fill: activeColor,
-        width: 200,
-      });
-      fabricCanvas.add(textbox);
-      fabricCanvas.setActiveObject(textbox);
+      ctx.fillStyle = activeColor;
+      ctx.font = '16px Arial';
+      ctx.fillText('Add your text here', 100, 120);
     } else if (tool === 'highlight') {
       setActiveColor('#ffff0080'); // Semi-transparent yellow
     }
@@ -219,14 +230,15 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   };
 
   const handleSaveAnnotations = async () => {
-    if (!fabricCanvas) return;
+    if (!canvasRef.current) return;
 
     try {
-      const fabricData = fabricCanvas.toJSON();
+      const canvas = canvasRef.current;
+      const dataURL = canvas.toDataURL();
       const annotationData = {
         paperId,
         page: currentPage,
-        annotations: fabricData,
+        annotations: dataURL,
         timestamp: new Date().toISOString()
       };
 
@@ -244,7 +256,7 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   };
 
   const handleDownloadPDF = () => {
-    if (!fabricCanvas || !pdfCanvasRef.current) return;
+    if (!canvasRef.current || !pdfCanvasRef.current) return;
 
     // Create a temporary canvas to combine PDF and annotations
     const tempCanvas = document.createElement('canvas');
@@ -260,8 +272,7 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     tempCtx.drawImage(pdfCanvas, 0, 0);
 
     // Draw annotations
-    const fabricCanvasElement = fabricCanvas.getElement();
-    tempCtx.drawImage(fabricCanvasElement, 0, 0);
+    tempCtx.drawImage(canvasRef.current, 0, 0);
 
     // Download
     tempCanvas.toBlob((blob) => {
@@ -277,9 +288,12 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   };
 
   const handleClearAnnotations = () => {
-    if (fabricCanvas) {
-      fabricCanvas.clear();
-      toast.success('Annotations cleared');
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        toast.success('Annotations cleared');
+      }
     }
   };
 
@@ -464,10 +478,11 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
             className="absolute inset-0 z-0"
           />
           
-          {/* Fabric Canvas (annotations overlay) */}
+          {/* Annotation Canvas (overlay) */}
           <canvas
             ref={canvasRef}
             className="absolute inset-0 z-10"
+            style={{ pointerEvents: activeTool === 'select' ? 'none' : 'auto' }}
           />
         </div>
       </div>
