@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { 
   ZoomIn, 
   ZoomOut, 
@@ -22,8 +22,11 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-// Set PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set up PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 type AnnotationTool = 'select' | 'highlight' | 'draw' | 'rectangle' | 'circle' | 'text';
 
@@ -39,51 +42,35 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   onSaveAnnotations
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const [pdfDoc, setPdfDoc] = useState<any>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [activeTool, setActiveTool] = useState<AnnotationTool>('select');
   const [activeColor, setActiveColor] = useState('#ffff00');
-  const [isLoading, setIsLoading] = useState(true);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPoint, setLastPoint] = useState<{x: number, y: number} | null>(null);
 
-  // Load PDF document
-  useEffect(() => {
-    const loadPDF = async () => {
-      try {
-        setIsLoading(true);
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        setPdfDoc(pdf);
-        setTotalPages(pdf.numPages);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-        toast.error('Failed to load PDF');
-        setIsLoading(false);
-      }
-    };
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+    toast.success('PDF loaded successfully');
+  };
 
-    if (pdfUrl) {
-      loadPDF();
-    }
-  }, [pdfUrl]);
+  const onDocumentLoadError = (error: Error) => {
+    console.error('Error loading PDF:', error);
+    toast.error('Failed to load PDF');
+  };
 
-  // Initialize Canvas
+
+  // Initialize Canvas for annotations
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    canvas.width = 800;
-    canvas.height = 1000;
-
+    
     // Add event listeners for drawing
     const handleMouseDown = (e: MouseEvent) => {
       if (activeTool === 'draw') {
@@ -137,45 +124,6 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     };
   }, [activeTool, activeColor, isDrawing, lastPoint]);
 
-  // Render PDF page
-  const renderPage = useCallback(async (pageNum: number) => {
-    if (!pdfDoc || !pdfCanvasRef.current) return;
-
-    try {
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale, rotation });
-      
-      const canvas = pdfCanvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      // Update annotation canvas size to match PDF
-      if (canvasRef.current) {
-        canvasRef.current.width = viewport.width;
-        canvasRef.current.height = viewport.height;
-      }
-
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport
-      };
-
-      await page.render(renderContext).promise;
-    } catch (error) {
-      console.error('Error rendering page:', error);
-      toast.error('Failed to render page');
-    }
-  }, [pdfDoc, scale, rotation]);
-
-  // Render current page when dependencies change
-  useEffect(() => {
-    if (pdfDoc && currentPage) {
-      renderPage(currentPage);
-    }
-  }, [renderPage, currentPage]);
-
   // Handle cursor changes based on tool
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -222,10 +170,10 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   };
 
   const handlePageChange = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    } else if (direction === 'next' && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (direction === 'prev' && pageNumber > 1) {
+      setPageNumber(pageNumber - 1);
+    } else if (direction === 'next' && pageNumber < numPages) {
+      setPageNumber(pageNumber + 1);
     }
   };
 
@@ -237,7 +185,7 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
       const dataURL = canvas.toDataURL();
       const annotationData = {
         paperId,
-        page: currentPage,
+        page: pageNumber,
         annotations: dataURL,
         timestamp: new Date().toISOString()
       };
@@ -256,7 +204,7 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
   };
 
   const handleDownloadPDF = () => {
-    if (!canvasRef.current || !pdfCanvasRef.current) return;
+    if (!canvasRef.current) return;
 
     // Create a temporary canvas to combine PDF and annotations
     const tempCanvas = document.createElement('canvas');
@@ -264,23 +212,13 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     
     if (!tempCtx) return;
 
-    const pdfCanvas = pdfCanvasRef.current;
-    tempCanvas.width = pdfCanvas.width;
-    tempCanvas.height = pdfCanvas.height;
-
-    // Draw PDF
-    tempCtx.drawImage(pdfCanvas, 0, 0);
-
-    // Draw annotations
-    tempCtx.drawImage(canvasRef.current, 0, 0);
-
-    // Download
-    tempCanvas.toBlob((blob) => {
+    // For now, just download the annotations
+    canvasRef.current.toBlob((blob) => {
       if (blob) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `annotated-paper-page-${currentPage}.png`;
+        a.download = `annotated-paper-page-${pageNumber}.png`;
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -306,17 +244,6 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
     // This would require implementing a history system for Fabric.js
     toast.info('Redo functionality coming soon');
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading PDF...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -420,18 +347,18 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
                   size="sm" 
                   variant="outline" 
                   onClick={() => handlePageChange('prev')}
-                  disabled={currentPage <= 1}
+                  disabled={pageNumber <= 1}
                 >
                   Previous
                 </Button>
                 <span className="text-sm">
-                  Page {currentPage} of {totalPages}
+                  Page {pageNumber} of {numPages}
                 </span>
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => handlePageChange('next')}
-                  disabled={currentPage >= totalPages}
+                  disabled={pageNumber >= numPages}
                 >
                   Next
                 </Button>
@@ -472,18 +399,41 @@ export const AdvancedPdfViewer: React.FC<AdvancedPdfViewerProps> = ({
             transform: `rotate(${rotation}deg)`,
           }}
         >
-          {/* PDF Canvas (background) */}
-          <canvas
-            ref={pdfCanvasRef}
-            className="absolute inset-0 z-0"
-          />
-          
-          {/* Annotation Canvas (overlay) */}
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 z-10"
-            style={{ pointerEvents: activeTool === 'select' ? 'none' : 'auto' }}
-          />
+          {/* React PDF Document */}
+          <Document
+            file={pdfUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading={
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p>Loading PDF...</p>
+                </div>
+              </div>
+            }
+          >
+            <div className="relative">
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                rotate={rotation}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+              
+              {/* Annotation Canvas (overlay) */}
+              <canvas
+                ref={canvasRef}
+                className="absolute inset-0 z-10"
+                style={{ 
+                  pointerEvents: activeTool === 'select' ? 'none' : 'auto',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+            </div>
+          </Document>
         </div>
       </div>
     </div>
