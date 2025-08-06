@@ -6,6 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { useAddNote, useDeleteNote } from '@/hooks/usePapers';
 import { Paper, PaperNote } from '@/types/papers';
 
@@ -106,42 +108,92 @@ export const PaperViewer: React.FC<PaperViewerProps> = ({
                 <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="info" className="flex-1 space-y-4 mt-4">
-                {/* Paper Information */}
-                <Card>
-                  <CardContent className="p-4 space-y-3">
-                    <div>
-                      <h4 className="font-medium text-sm text-muted-foreground">Authors</h4>
-                      <p className="text-sm">{paper.authors.join(', ')}</p>
-                    </div>
-                    
-                    {paper.journal && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground">Journal</h4>
-                        <p className="text-sm">{paper.journal}</p>
+              <TabsContent value="info" className="flex-1 mt-4">
+                <ScrollArea className="h-full">
+                  <div className="space-y-6 pr-4">
+                    {/* Authors Section */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <h4 className="font-semibold text-sm">Authors</h4>
                       </div>
-                    )}
-                    
-                    <div>
-                      <h4 className="font-medium text-sm text-muted-foreground">Publication Date</h4>
-                      <p className="text-sm">{new Date(paper.publication_date).toLocaleDateString()}</p>
-                    </div>
-                    
-                    {paper.doi && (
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground">DOI</h4>
-                        <p className="text-sm font-mono">{paper.doi}</p>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="text-sm leading-relaxed">{paper.authors.join(', ')}</p>
                       </div>
-                    )}
-                    
-                    <div>
-                      <h4 className="font-medium text-sm text-muted-foreground">Abstract</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {paper.abstract}
-                      </p>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <Separator />
+                    
+                    {/* Publication Details */}
+                    <div className="grid gap-4">
+                      {paper.journal && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Journal</h4>
+                          <p className="text-sm bg-muted/30 rounded-md px-3 py-2">{paper.journal}</p>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Publication Date</h4>
+                        <p className="text-sm bg-muted/30 rounded-md px-3 py-2">
+                          {new Date(paper.publication_date).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </p>
+                      </div>
+                      
+                      {paper.doi && (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">DOI</h4>
+                          <div className="bg-muted/30 rounded-md px-3 py-2">
+                            <p className="text-sm font-mono break-all">{paper.doi}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <Separator />
+                    
+                    {/* Abstract Section */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        <h4 className="font-semibold text-sm">Abstract</h4>
+                      </div>
+                      <div className="bg-gradient-to-br from-muted/40 to-muted/60 rounded-lg p-4 border border-border/50">
+                        <p className="text-sm leading-relaxed text-foreground/90">
+                          {paper.abstract}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tags Section */}
+                    {paper.tags.length > 0 && (
+                      <>
+                        <Separator />
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary"></div>
+                            <h4 className="font-semibold text-sm">Tags</h4>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {paper.tags.map((tag) => (
+                              <Badge 
+                                key={tag} 
+                                variant="secondary" 
+                                className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </ScrollArea>
               </TabsContent>
 
               <TabsContent value="notes" className="flex-1 mt-4">
