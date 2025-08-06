@@ -102,14 +102,14 @@ export const PaperViewer: React.FC<PaperViewerProps> = ({
 
           {/* Side Panel */}
           <div className="w-80 flex flex-col">
-            <Tabs defaultValue="info" className="flex-1">
+            <Tabs defaultValue="info" className="flex-1 flex flex-col">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="info">Info</TabsTrigger>
                 <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="info" className="flex-1 mt-4">
-                <ScrollArea className="h-full">
+              <TabsContent value="info" className="flex-1 mt-4 overflow-hidden">
+                <ScrollArea className="h-full max-h-[calc(90vh-200px)]">
                   <div className="space-y-6 pr-4">
                     {/* Authors Section */}
                     <div className="space-y-3">
@@ -196,7 +196,7 @@ export const PaperViewer: React.FC<PaperViewerProps> = ({
                 </ScrollArea>
               </TabsContent>
 
-              <TabsContent value="notes" className="flex-1 mt-4">
+              <TabsContent value="notes" className="flex-1 mt-4 overflow-hidden">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-medium">Notes</h3>
