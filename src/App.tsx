@@ -18,6 +18,7 @@ import { AffiliationFormPage } from "@/pages/affiliation-form";
 import { ProjectsPage } from "@/pages/projects";
 import { ProjectDetailPage } from "@/pages/project-detail";
 import { PapersPage } from "@/pages/papers";
+import { SettingsPage } from "@/pages/settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/profile/affiliations" element={<AffiliationsPage />} />
             <Route path="/profile/affiliations/new" element={<AffiliationFormPage />} />
             <Route path="/profile/affiliations/:id/edit" element={<AffiliationFormPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             
             {/* Project routes */}
             <Route path="/projects" element={<ProjectsPage />} />
