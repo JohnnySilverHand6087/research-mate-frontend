@@ -17,7 +17,10 @@ import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   Document,
-  CreateDocumentRequest
+  CreateDocumentRequest,
+  GroupMember,
+  InviteMemberRequest,
+  UpdateMemberRoleRequest
 } from '@/types/api';
 import {
   Paper,
@@ -27,7 +30,7 @@ import {
   CreateNoteRequest,
   ChatMessage
 } from '@/types/papers';
-import { PositionType, TaskStatus, TaskPriority, DocumentType } from '@/types/api';
+import { PositionType, TaskStatus, TaskPriority, DocumentType, ProjectType, MemberRole } from '@/types/api';
 
 const API_BASE_URL = 'https://api.staging.researchmate.ai/v1';
 
@@ -85,6 +88,7 @@ const dummyProjects: Project[] = [
     name: 'Research Paper Analysis',
     description: 'Analyzing recent developments in machine learning research',
     status: 'active',
+    type: ProjectType.PERSONAL,
     user_id: '1',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-20T14:30:00Z',
@@ -94,6 +98,7 @@ const dummyProjects: Project[] = [
     name: 'Literature Review',
     description: 'Comprehensive review of natural language processing literature',
     status: 'active',
+    type: ProjectType.PERSONAL,
     user_id: '1',
     created_at: '2024-01-10T09:00:00Z',
     updated_at: '2024-01-18T16:45:00Z',
@@ -103,9 +108,79 @@ const dummyProjects: Project[] = [
     name: 'Thesis Preparation',
     description: 'Preparing final thesis chapters and references',
     status: 'completed',
+    type: ProjectType.PERSONAL,
     user_id: '1',
     created_at: '2023-12-01T08:00:00Z',
     updated_at: '2024-01-05T12:00:00Z',
+  },
+  {
+    id: '4',
+    name: 'AI Research Collaboration',
+    description: 'Collaborative research project on artificial intelligence ethics',
+    status: 'active',
+    type: ProjectType.GROUP,
+    user_id: '1',
+    created_at: '2024-01-20T10:00:00Z',
+    updated_at: '2024-01-25T14:30:00Z',
+  },
+  {
+    id: '5',
+    name: 'Data Science Team Project',
+    description: 'Cross-functional team working on data analysis methodologies',
+    status: 'active',
+    type: ProjectType.GROUP,
+    user_id: '2',
+    created_at: '2024-01-18T09:00:00Z',
+    updated_at: '2024-01-24T16:45:00Z',
+  },
+];
+
+// Dummy group members data
+const dummyGroupMembers: GroupMember[] = [
+  {
+    id: '1',
+    project_id: '4',
+    user_id: '1',
+    role: MemberRole.LEADER,
+    user_name: 'John Doe',
+    user_email: 'john@example.com',
+    joined_at: '2024-01-20T10:00:00Z',
+  },
+  {
+    id: '2',
+    project_id: '4',
+    user_id: '2',
+    role: MemberRole.MEMBER,
+    user_name: 'Jane Smith',
+    user_email: 'jane@example.com',
+    joined_at: '2024-01-21T11:00:00Z',
+  },
+  {
+    id: '3',
+    project_id: '4',
+    user_id: '3',
+    role: MemberRole.MEMBER,
+    user_name: 'Bob Johnson',
+    user_email: 'bob@example.com',
+    joined_at: '2024-01-22T12:00:00Z',
+  },
+  {
+    id: '4',
+    project_id: '5',
+    user_id: '2',
+    role: MemberRole.LEADER,
+    user_name: 'Jane Smith',
+    user_email: 'jane@example.com',
+    joined_at: '2024-01-18T09:00:00Z',
+  },
+  {
+    id: '5',
+    project_id: '5',
+    user_id: '4',
+    role: MemberRole.MEMBER,
+    user_name: 'Alice Brown',
+    user_email: 'alice@example.com',
+    joined_at: '2024-01-19T10:00:00Z',
   },
 ];
 
@@ -397,6 +472,7 @@ export const projectsApi = {
         name: project.name,
         description: project.description,
         status: 'active',
+        type: project.type || ProjectType.PERSONAL,
         user_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -453,6 +529,13 @@ export const tasksApi = {
   async createTask(task: CreateTaskRequest): Promise<Task> {
     if (USE_DUMMY_DATA) {
       await new Promise(resolve => setTimeout(resolve, 600));
+      // For group projects, find assignee name
+      let assigneeName = undefined;
+      if (task.assigned_to) {
+        const member = dummyGroupMembers.find(m => m.user_id === task.assigned_to);
+        assigneeName = member?.user_name;
+      }
+
       const newTask: Task = {
         id: String(Date.now()),
         project_id: task.project_id,
@@ -460,6 +543,9 @@ export const tasksApi = {
         description: task.description,
         status: task.status,
         priority: task.priority || TaskPriority.MEDIUM,
+        assigned_to: task.assigned_to,
+        assigned_by: '1', // Current user
+        assignee_name: assigneeName,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -716,6 +802,85 @@ export const papersApi = {
     }
 
     const response = await apiClient.get(`/papers/doi/${encodeURIComponent(doi)}`);
+    return response.data;
+  },
+};
+
+// Group Projects API
+export const groupProjectsApi = {
+  async getProjectMembers(projectId: string): Promise<GroupMember[]> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      return dummyGroupMembers.filter(member => member.project_id === projectId);
+    }
+    const response = await apiClient.get(`/projects/${projectId}/members`);
+    return response.data;
+  },
+
+  async inviteMember(projectId: string, invitation: InviteMemberRequest): Promise<GroupMember> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      const newMember: GroupMember = {
+        id: String(Date.now()),
+        project_id: projectId,
+        user_id: String(Date.now() + Math.random()),
+        role: invitation.role || MemberRole.MEMBER,
+        user_name: invitation.email.split('@')[0], // Mock name from email
+        user_email: invitation.email,
+        joined_at: new Date().toISOString(),
+      };
+      dummyGroupMembers.push(newMember);
+      return newMember;
+    }
+    const response = await apiClient.post(`/projects/${projectId}/members`, invitation);
+    return response.data;
+  },
+
+  async updateMemberRole(projectId: string, memberId: string, updates: UpdateMemberRoleRequest): Promise<GroupMember> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const index = dummyGroupMembers.findIndex(m => m.id === memberId && m.project_id === projectId);
+      if (index >= 0) {
+        dummyGroupMembers[index] = {
+          ...dummyGroupMembers[index],
+          ...updates,
+        };
+        return dummyGroupMembers[index];
+      }
+      throw new Error('Member not found');
+    }
+    const response = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, updates);
+    return response.data;
+  },
+
+  async removeMember(projectId: string, memberId: string): Promise<void> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      const index = dummyGroupMembers.findIndex(m => m.id === memberId && m.project_id === projectId);
+      if (index >= 0) {
+        dummyGroupMembers.splice(index, 1);
+      }
+      return;
+    }
+    await apiClient.delete(`/projects/${projectId}/members/${memberId}`);
+  },
+
+  async getAvailableUsers(query: string): Promise<{ id: string; name: string; email: string; }[]> {
+    if (USE_DUMMY_DATA) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const mockUsers = [
+        { id: '2', name: 'Jane Smith', email: 'jane@example.com' },
+        { id: '3', name: 'Bob Johnson', email: 'bob@example.com' },
+        { id: '4', name: 'Alice Brown', email: 'alice@example.com' },
+        { id: '5', name: 'Charlie Wilson', email: 'charlie@example.com' },
+        { id: '6', name: 'David Lee', email: 'david@example.com' },
+      ].filter(user => 
+        user.name.toLowerCase().includes(query.toLowerCase()) || 
+        user.email.toLowerCase().includes(query.toLowerCase())
+      );
+      return mockUsers;
+    }
+    const response = await apiClient.get(`/users/search`, { params: { query } });
     return response.data;
   },
 };

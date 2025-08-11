@@ -7,14 +7,15 @@ import { TaskCard } from './task-card';
 import { TaskModal } from './task-modal';
 import { CreateTaskModal } from './create-task-modal';
 import { useTasks, useMoveTask } from '@/hooks/useTasks';
-import { Task, TaskStatus, TaskPriority } from '@/types/api';
+import { Task, TaskStatus, TaskPriority, ProjectType } from '@/types/api';
 import { Plus, Columns } from 'lucide-react';
 
 interface KanbanBoardProps {
   projectId: string;
+  projectType: ProjectType;
 }
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, projectType }) => {
   const { data: tasks = [], isLoading } = useTasks(projectId);
   const { moveTask } = useMoveTask();
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
@@ -143,6 +144,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId }) => {
       {/* Create Task Modal */}
       <CreateTaskModal
         projectId={projectId}
+        projectType={projectType}
         defaultStatus={createTaskStatus}
         open={showCreateModal}
         onOpenChange={setShowCreateModal}

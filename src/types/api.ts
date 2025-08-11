@@ -87,23 +87,54 @@ export interface ApiError {
 }
 
 // Project Types
+export enum ProjectType {
+  PERSONAL = 'personal',
+  GROUP = 'group'
+}
+
+export enum MemberRole {
+  LEADER = 'leader',
+  MEMBER = 'member'
+}
+
 export interface Project {
   id: string;
   name: string;
   description?: string;
   status: 'active' | 'completed' | 'archived';
-  user_id: string;
+  type: ProjectType;
+  user_id: string; // creator/owner
   created_at: string;
   updated_at: string;
+}
+
+export interface GroupMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  role: MemberRole;
+  user_name: string;
+  user_email: string;
+  joined_at: string;
 }
 
 export interface CreateProjectRequest {
   name: string;
   description?: string;
+  type: ProjectType;
 }
 
 export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
   status?: 'active' | 'completed' | 'archived';
+}
+
+export interface InviteMemberRequest {
+  email: string;
+  role?: MemberRole;
+}
+
+export interface UpdateMemberRoleRequest {
+  role: MemberRole;
 }
 
 // Task Types for Kanban Board
@@ -128,6 +159,9 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
+  assigned_to?: string; // user_id of assignee
+  assigned_by?: string; // user_id of assigner
+  assignee_name?: string; // display name of assignee
   created_at: string;
   updated_at: string;
 }
@@ -138,6 +172,7 @@ export interface CreateTaskRequest {
   description?: string;
   status: TaskStatus;
   priority?: TaskPriority;
+  assigned_to?: string;
 }
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {}

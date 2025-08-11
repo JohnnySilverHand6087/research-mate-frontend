@@ -12,13 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -28,29 +22,34 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useCreateTask } from '@/hooks/useTasks';
-import { CreateTaskRequest, TaskStatus, TaskPriority } from '@/types/api';
+import { useProjectMembers } from '@/hooks/useGroupProjects';
+import { CreateTaskRequest, TaskStatus, TaskPriority, ProjectType } from '@/types/api';
 
 const createTaskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  title: z.string().min(1, 'Task title is required').max(200, 'Title is too long'),
+  description: z.string().max(1000, 'Description is too long').optional(),
   status: z.nativeEnum(TaskStatus),
   priority: z.nativeEnum(TaskPriority),
+  assigned_to: z.string().optional(),
 });
 
 interface CreateTaskModalProps {
   projectId: string;
-  defaultStatus: TaskStatus;
+  projectType: ProjectType;
+  defaultStatus?: TaskStatus;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   projectId,
-  defaultStatus,
+  projectType,
+  defaultStatus = TaskStatus.TODO,
   open,
   onOpenChange,
 }) => {
   const createTask = useCreateTask();
+  const { data: members } = useProjectMembers(projectType === ProjectType.GROUP ? projectId : '');
 
   const form = useForm<CreateTaskRequest>({
     resolver: zodResolver(createTaskSchema),
@@ -60,6 +59,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       description: '',
       status: defaultStatus,
       priority: TaskPriority.MEDIUM,
+      assigned_to: '',
     },
   });
 
@@ -178,6 +178,34 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 )}
               />
             </div>
+
+            {projectType === ProjectType.GROUP && members && members.length > 0 && (
+              <FormField
+                control={form.control}
+                name="assigned_to"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assign To (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select team member" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Unassigned</SelectItem>
+                        {members.map((member) => (
+                          <SelectItem key={member.id} value={member.user_id}>
+                            {member.user_name} ({member.role})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex gap-2 pt-4">
               <Button

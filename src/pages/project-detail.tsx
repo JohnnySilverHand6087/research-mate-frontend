@@ -9,6 +9,7 @@ import { useProject } from '@/hooks/useProjects';
 import { ProjectDashboard } from '@/components/project/project-dashboard';
 import { KanbanBoard } from '@/components/project/kanban-board';
 import { ProjectDocuments } from '@/components/project/project-documents';
+import { ProjectMembers } from '@/components/project/project-members';
 import { ArrowLeft, BarChart3, Kanban, FileText } from 'lucide-react';
 
 export const ProjectDetailPage: React.FC = () => {
@@ -121,7 +122,7 @@ export const ProjectDetailPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="kanban" className="mt-6">
-            <KanbanBoard projectId={project.id} />
+            <KanbanBoard projectId={project.id} projectType={project.type} />
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">

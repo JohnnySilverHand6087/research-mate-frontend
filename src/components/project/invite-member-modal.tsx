@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -21,38 +19,39 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useCreateProject } from '@/hooks/useProjects';
-import { CreateProjectRequest, ProjectType } from '@/types/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useInviteMember } from '@/hooks/useGroupProjects';
+import { InviteMemberRequest, MemberRole } from '@/types/api';
 
-const createProjectSchema = z.object({
-  name: z.string().min(1, 'Project name is required').max(100, 'Name is too long'),
-  description: z.string().max(500, 'Description is too long').optional(),
-  type: z.nativeEnum(ProjectType),
+const inviteMemberSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  role: z.nativeEnum(MemberRole),
 });
 
-interface CreateProjectModalProps {
+interface InviteMemberModalProps {
+  projectId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
+export const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
+  projectId,
   open,
   onOpenChange,
 }) => {
-  const createProject = useCreateProject();
+  const inviteMember = useInviteMember();
   
-  const form = useForm<CreateProjectRequest>({
-    resolver: zodResolver(createProjectSchema),
+  const form = useForm<InviteMemberRequest>({
+    resolver: zodResolver(inviteMemberSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      type: ProjectType.PERSONAL,
+      email: '',
+      role: MemberRole.MEMBER,
     },
   });
 
-  const onSubmit = async (data: CreateProjectRequest) => {
+  const onSubmit = async (data: InviteMemberRequest) => {
     try {
-      await createProject.mutateAsync(data);
+      await inviteMember.mutateAsync({ projectId, invitation: data });
       form.reset();
       onOpenChange(false);
     } catch (error) {
@@ -64,9 +63,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>Invite Team Member</DialogTitle>
           <DialogDescription>
-            Start a new research project to organize your tasks and documents.
+            Invite a new member to collaborate on this project.
           </DialogDescription>
         </DialogHeader>
 
@@ -74,13 +73,14 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Name</FormLabel>
+                  <FormLabel>Email Address</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., Machine Learning Research"
+                      type="email"
+                      placeholder="member@example.com"
                       {...field}
                     />
                   </FormControl>
@@ -91,43 +91,25 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
             <FormField
               control={form.control}
-              name="type"
+              name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Type</FormLabel>
+                  <FormLabel>Role</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select project type" />
+                        <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={ProjectType.PERSONAL}>
-                        Personal Project
+                      <SelectItem value={MemberRole.MEMBER}>
+                        Member
                       </SelectItem>
-                      <SelectItem value={ProjectType.GROUP}>
-                        Group Project
+                      <SelectItem value={MemberRole.LEADER}>
+                        Leader
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe what this project is about..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -144,10 +126,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               </Button>
               <Button
                 type="submit"
-                disabled={createProject.isPending}
+                disabled={inviteMember.isPending}
                 className="flex-1"
               >
-                {createProject.isPending ? 'Creating...' : 'Create Project'}
+                {inviteMember.isPending ? 'Inviting...' : 'Send Invitation'}
               </Button>
             </div>
           </form>
